@@ -22,8 +22,9 @@ install:
   - conda update -q conda
   - conda info -a
   - conda config --append channels conda-forge
-  - "conda create -q -n test-environment python=%PYTHON_VERSION% pip scipy pandas matplotlib lmfit cython numba nbconvert pytest ipykernel ipywidgets seaborn terminado"
+  - "conda create -q -n test-environment python=%PYTHON_VERSION% pip scipy matplotlib lmfit cython numba nbconvert pytest ipykernel ipywidgets seaborn terminado"
   - activate test-environment
+  - conda install pandas=0.25.2
   - conda install phconvert
   - python -m pip install --upgrade pip
   - pip install pybroom
