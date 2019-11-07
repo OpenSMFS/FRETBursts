@@ -19,7 +19,7 @@ install:
     - conda create -n conda_test_env --yes python=$TRAVIS_PYTHON_VERSION
     - source activate conda_test_env
     - conda install --yes scipy matplotlib cython numba pytest nbconvert ipykernel ipywidgets seaborn
-    - conda install pandas=0.25.2
+    - conda install pandas<=0.24.0
     - conda config --append channels conda-forge
     - conda install --yes lmfit
     - conda install --yes phconvert
