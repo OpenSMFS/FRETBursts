@@ -60,13 +60,5 @@ def test_expon_fit_histw(sample):
             (tau_fit, relative_error*100))
     assert relative_error < max_relative_error
 
-def test_normpdf(sample):
-    lambda_fit, resid, x_resid, size = expon_fit(sample, s_min=sample_min)
-    tau_fit = 1./lambda_fit
-    relative_error = np.abs(tau_fit-sample_tau)/sample_tau
-    print('\n [normpdf] Fit (tau): %.2f  - Relative error: %.2f %%' % \
-            (tau_fit, relative_error*100))
-    assert relative_error < max_relative_error
-
 if __name__ == '__main__':
     pytest.main("-x -v -s fretbursts/fit/test_exp_fitting.py")
