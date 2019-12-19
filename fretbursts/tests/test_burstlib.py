@@ -81,7 +81,7 @@ def load_fake_pax():
 
 x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
 
-def normpdf(x, mu=0, sigma=1.):
+def normpdf(x, mu=0, sigma=0):
     """Return the normal pdf evaluated at `x`."""
     if mu != 1 and sigma != 1:
         u = (x-mu)/sigma
@@ -1172,7 +1172,7 @@ def test_collapse(data_8ch):
         else:
             assert np.allclose(dc1[name][0], dc2[name][0])
 
-def test_normpdf()
+def test_normpdf():
     assert np.allclose(normpdf(x, mu=mu, sigma=sigma), norm.pdf(x, loc=mu, scale=sigma))
 
 if __name__ == '__main__':
