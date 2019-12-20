@@ -40,8 +40,8 @@ from itertools import cycle
 # Numeric imports
 import numpy as np
 from numpy import arange, r_
-from matplotlib.mlab import normpdf
-from scipy.stats import erlang
+#from matplotlib.mlab import normpdf
+from scipy.stats import (erlang, norm)
 from scipy.interpolate import UnivariateSpline
 
 # Graphics imports
@@ -1018,8 +1018,8 @@ def _fitted_E_plot(d, i=0, F=1, no_E=False, ax=None, show_model=True,
                 a2 = (1-a1)
             elif d.fit_E_res.shape[1] == 6:
                 m1, s1, a1, m2, s2, a2 = d.fit_E_res[i, :]
-            y1 = a1*normpdf(x, m1, s1)
-            y2 = a2*normpdf(x, m2, s2)
+            y1 = a1*norm.pdf(x, m1, s1)
+            y2 = a2*norm.pdf(x, m2, s2)
             ax2.plot(x, scale*y1, ls='--', lw=lw, alpha=alpha, color=color)
             ax2.plot(x, scale*y2, ls='--', lw=lw, alpha=alpha, color=color)
         if fillcolor is None:
