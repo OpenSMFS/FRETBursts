@@ -313,7 +313,7 @@ def test_bg_calc(data):
     data.calc_bg(bg.exp_fit, time_s=30, tail_min_us='auto', F_bg=1.7,
                  fit_allph=False)
     streams = [s for s in data.ph_streams if s != Ph_sel('all')]
-    bg_t = [np.sum(data.bg[s][ich] for s in streams) for ich in range(data.nch)]
+    bg_t = [sum(data.bg[s][ich] for s in streams) for ich in range(data.nch)]
     assert list_array_equal(data.bg[Ph_sel('all')], bg_t)
 
 
@@ -1175,7 +1175,7 @@ def test_normpdf():
     x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
     mu = 0
     sigma = 1.1
-    
+
     assert np.allclose(normpdf(x, mu=mu, sigma=sigma), norm.pdf(x, loc=mu, scale=sigma))
 
 if __name__ == '__main__':
