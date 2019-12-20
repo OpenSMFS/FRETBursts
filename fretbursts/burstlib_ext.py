@@ -793,7 +793,7 @@ def join_data(d_list, gap=0):
             concatenate = Bursts.merge if name == 'mburst' else np.concatenate
 
             for ich in range(nch):
-                new_size = np.sum(np.fromiter((d.mburst[ich].num_bursts for d in d_list)))
+                new_size = sum(d.mburst[ich].num_bursts for d in d_list)
                 if new_size == 0:
                     continue  # -> No bursts in this ch
 
@@ -802,7 +802,7 @@ def join_data(d_list, gap=0):
                 assert new_d[name][ich].size == new_size
 
     # Set the background fields by concatenation along axis = 0
-    new_nperiods = np.sum(np.fromiter((d.nperiods for d in d_list)))
+    new_nperiods = sum(d.nperiods for d in d_list)
     for name in ('Lim', 'Ph_p'):
         if name in new_d:
             new_d.add(**{name: []})
