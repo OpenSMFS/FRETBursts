@@ -1172,6 +1172,10 @@ def test_collapse(data_8ch):
             assert np.allclose(dc1[name][0], dc2[name][0])
 
 def test_normpdf():
+    x = np.linspace(norm.ppf(0.01), norm.ppf(0.99), 100)
+    mu = 0
+    sigma = 1.1
+    
     assert np.allclose(normpdf(x, mu=mu, sigma=sigma), norm.pdf(x, loc=mu, scale=sigma))
 
 if __name__ == '__main__':
