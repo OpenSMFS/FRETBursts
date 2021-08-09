@@ -42,3 +42,5 @@ script:
     - python ../fretbursts/tests/nbrun.py --exclude-list dev/exclude-py27.txt .
 
 sudo: false
+
+# Travis-CI.com migration
