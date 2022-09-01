@@ -15,6 +15,7 @@ loading and preprocessing can be found in the `dataload` folder.
 """
 
 import os
+from collections.abc import Iterable
 import numpy as np
 import tables
 
@@ -23,6 +24,7 @@ from .dataload.spcreader import load_spc
 from .burstlib import Data
 from .utils.misc import selection_mask
 from . import loader_legacy
+from .burstlib_ext import group_data
 import phconvert as phc
 
 import logging
@@ -338,6 +340,9 @@ def photon_hdf5(filename, ondisk=False, require_setup=True, validate=False):
     Returns:
         :class:`fretbursts.burstlib.Data` object containing the data.
     """
+    if not isinstance(filename, str) and isinstance(filename, Iterable):
+        d = group_data([photon_hdf5(f) for f in filename])
+        return d
     filename = str(filename)
     assert os.path.isfile(filename), 'File not found.'
     version = phc.hdf5._check_version(filename)
@@ -588,7 +593,7 @@ def nsalex(fname):
     return dx
 
 
-def nsalex_apply_period(d, delete_ph_t=True):
+def _nsalex_apply_period_1ch(d, i, delete_ph_t=True):
     """Applies to the Data object `d` the alternation period previously set.
 
     Note that you first need to load the data in a variable `d` and then
@@ -651,22 +656,50 @@ def nsalex_apply_period(d, delete_ph_t=True):
     a_ex = a_ex_mask_t[valid]
     assert (d_ex + a_ex).all()
     assert not (d_ex * a_ex).any()
-
-    d.add(ph_times_m=[ph_times], nanotimes=[nanotimes],
-          D_em=[d_em], A_em=[a_em], D_ex=[d_ex], A_ex=[a_ex],
-          alternation_applied=True)
-
+    _append_data_ch(d, 'ph_times_m', ph_times)
+    _append_data_ch(d, 'nanotimes', nanotimes)
+    _append_data_ch(d, 'D_em', d_em)
+    _append_data_ch(d, 'A_em', a_em)
+    _append_data_ch(d, 'D_ex', d_ex)
+    _append_data_ch(d, 'A_ex', a_ex)
+    
     if d.polarization:
         # We also have polarization data
         p_polariz_ch, s_polariz_ch = d._det_p_s_pol_multich[ich]
         p_em, s_em = _get_det_masks(det_t, p_polariz_ch, s_polariz_ch, valid,
                                     ich=ich)
-        d.add(P_em=[p_em], S_em=[s_em])
+        _append_data_ch(d, 'P_em', p_em)
+        _append_data_ch(d, 'S_em', s_em)
 
+def nsalex_apply_period(d, delete_ph_t=True):
+    """Applies to the Data object `d` the alternation period previously set.
+
+    Note that you first need to load the data in a variable `d` and then
+    set the alternation parameters using `d.add(D_ON=..., A_ON=...)`.
+
+    The typical pattern for loading ALEX data is the following::
+
+        d = loader.photon_hdf5(fname=fname)
+        d.add(D_ON=(2850, 580), A_ON=(900, 2580))
+        alex_plot_alternation(d)
+
+    If the plot looks good, apply the alternation with::
+
+        loader.alex_apply_period(d)
+
+    Now `d` is ready for further processing such as background estimation,
+    burst search, etc...
+
+    *See also:* :func:`alex_apply_period`.
+    """
+    for ich in range(d.nch):
+        _nsalex_apply_period_1ch(d,ich)
     if delete_ph_t:
         d.delete('ph_times_t')
         d.delete('det_t')
         d.delete('nanotimes_t')
+    d.add(alternation_applied=True)
+    return d
 
 
 def _get_det_masks(det_t, det_ch1, det_ch2, valid, mask_ref=None, ich=0):

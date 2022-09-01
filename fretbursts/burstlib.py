@@ -648,6 +648,7 @@ class Data(DataContainer):
     # Each attribute is a list (1 element per ch) of arrays (1 element
     # per photon).
     ph_fields = ['ph_times_m', 'nanotimes', 'particles',
+                 'ph_times_t', 'nanotimes_t', 'particles_t', 'det_t',
                  'A_em', 'D_em', 'A_ex', 'D_ex']
 
     # Attribute names containing background data.
@@ -1384,7 +1385,7 @@ class Data(DataContainer):
         dc.add(ich_burst=np.hstack(ich_burst)[indexsort])
 
         for name in self.burst_fields:
-            if name in self and name is not 'mburst':
+            if name in self and name != 'mburst':
                 # Concatenate arrays along axis = 0
                 value = [x for i, x in enumerate(self[name])
                          if i not in skip_ch]

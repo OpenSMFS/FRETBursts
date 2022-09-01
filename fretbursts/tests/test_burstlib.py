@@ -9,11 +9,9 @@ Module containing automated unit tests for FRETBursts.
 Running the tests requires `py.test`.
 """
 
-from __future__ import division
-from builtins import range, zip
-
 from collections import namedtuple
 import pytest
+from itertools import product
 import numpy as np
 from scipy.stats import norm
 
@@ -36,6 +34,7 @@ else:
 import fretbursts.background as bg
 import fretbursts.burstlib as bl
 import fretbursts.burstlib_ext as bext
+from fretbursts.burstlib import Data
 from fretbursts import loader
 from fretbursts import select_bursts
 from fretbursts.ph_sel import Ph_sel
@@ -55,6 +54,14 @@ def _alex_process(d):
 
 def load_dataset_1ch(process=True):
     fn = "0023uLRpitc_NTP_20dT_0.5GndCl.hdf5"
+    fname = DATASETS_DIR + fn
+    d = loader.photon_hdf5(fname)
+    if process:
+        _alex_process(d)
+    return d
+
+def load_dataset_1ch_nsalex(process=True):
+    fn = "dsdna_d7_d17_50_50_1.hdf5"
     fname = DATASETS_DIR + fn
     d = loader.photon_hdf5(fname)
     if process:
@@ -82,17 +89,6 @@ def load_fake_pax():
 def normpdf(x, c=0, mu=0.5):
     return np.exp(-(x-c)**2/((mu**2)*2))/(mu*np.sqrt(2*np.pi))
 
-
-@pytest.fixture(scope="module", params=[
-                                    load_dataset_1ch,
-                                    load_dataset_8ch,
-                                    ])
-def data(request):
-    load_func = request.param
-    d = load_func()
-    return d
-
-
 @pytest.fixture(scope="module")
 def data_8ch(request):
     d = load_dataset_8ch()
@@ -102,6 +98,57 @@ def data_8ch(request):
 def data_1ch(request):
     d = load_dataset_1ch()
     return d
+
+@pytest.fixture(scope="module")
+def data_1ch_nsalex(request):
+    d = load_dataset_1ch_nsalex()
+    return d
+
+@pytest.mark.parametrize("data_ch, process", product([load_dataset_1ch, 
+                                             load_dataset_1ch_nsalex, 
+                                             load_dataset_8ch],
+                                            [True, False]))
+def test_group_data(data_ch, process):
+    if data_ch is load_dataset_8ch:
+        orig_d = data_ch()
+    else:
+        orig_d = data_ch(process=process)
+    n = orig_d.nch
+    d = bext.group_data([orig_d for _ in range(8)])
+    assert n*8 == d.nch
+    for field in Data.ph_fields:
+        if hasattr(d, field):
+            assert len(d[field]) == 8*n, f"{field} not correct length"
+    if not process and orig_d.alternated:
+        loader.alex_apply_period(d)
+        for field in Data.ph_fields:
+            if hasattr(d, field):
+                assert len(d[field]) == 8*n, f"{field} not correct length"
+    d.calc_bg(bg.exp_fit, time_s=30, tail_min_us='auto')
+    d.burst_search(m=10, F=7, L=10)
+    for field in Data.burst_fields:
+        if hasattr(d, field):
+            assert len(d[field]) == 8*n, f'{field} not correct length'
+
+def load_dataset_grouped(process=True):
+    d = load_dataset_1ch_nsalex(process=False)
+    d = bext.group_data([d for _ in range(8)])
+    if process:
+        _alex_process(d)
+    return d
+
+@pytest.fixture(scope="module", params=[
+                                    load_dataset_1ch,
+                                    load_dataset_1ch_nsalex,
+                                    load_dataset_8ch,
+                                    load_dataset_grouped
+                                    ])
+def data(request):
+    load_func = request.param
+    d = load_func()
+    return d
+
+
 
 
 ##
@@ -510,7 +557,10 @@ def test_burst_search(data):
         assert list_equal(data.bg_bs, data.bg_from(sel))
 
     if data.alternated:
-        data.burst_search(m=10, F=7, ph_sel=Ph_sel(Dex='DAem'), compact=True)
+        if data.lifetime:
+            data.burst_search(m=10, F=7, ph_sel=Ph_sel(Dex='DAem'), compact=False)
+        else:
+            data.burst_search(m=10, F=7, ph_sel=Ph_sel(Dex='DAem'), compact=True)
     data.burst_search(L=10, m=10, F=7)
 
 
@@ -917,7 +967,10 @@ def test_calc_max_rate(data):
     """Smoke test for Data.calc_max_rate()"""
     data.calc_max_rate(m=10)
     if data.alternated:
-        data.calc_max_rate(m=10, ph_sel=Ph_sel(Dex='DAem'), compact=True)
+        if data.lifetime:
+            data.calc_max_rate(m=10, ph_sel=Ph_sel(Dex='DAem'), compact=False)
+        else:
+            data.calc_max_rate(m=10, ph_sel=Ph_sel(Dex='DAem'), compact=True)
 
 
 def test_burst_data(data):

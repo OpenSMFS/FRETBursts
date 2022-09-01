@@ -48,6 +48,7 @@ Finally a few functions deal with burst timestamps:
 
 """
 
+from itertools import chain, islice
 import numpy as np
 from scipy.stats import erlang
 from scipy.optimize import leastsq
@@ -57,7 +58,7 @@ import tables
 
 from .ph_sel import Ph_sel
 from . import background as bg
-from .utils.misc import pprint, HistData, _is_list_of_arrays
+from .utils.misc import pprint, HistData, _is_list_of_arrays, dict_equal
 
 from . import burstlib
 from . import select_bursts
@@ -772,8 +773,6 @@ def join_data(d_list, gap=0):
         `d_merged` will contain bursts from both input files.
 
     """
-    from itertools import islice
-
     nch = d_list[0].nch
     bg_time_s = d_list[0].bg_time_s
     for d in d_list:
@@ -849,6 +848,77 @@ def join_data(d_list, gap=0):
             bursts_ch_i.stop += offset_clk
         iburst_start += d_i.num_bursts
 
+    return new_d
+
+def group_data(d_list):
+    """
+    Group a list of data objects into single data object as though each
+    data object was a different set of set of spots, so the returned data object 
+    appears as a multi-spot experiment. Usefull for joining technical repeats,
+    especially so that background calculation etc can be calculated equally on all
+    members.
+    This serves as an alternative to :func:`join_data` but has some key differences:
+    1. Data objects can be at any state of analysis
+    2. Photon data is maintained, so reassesment of background, burst search etc. all remain possible
+    3. Each data object is treated as a separate spot, so burst arrays are not concatenated
+
+    Parameters
+    ----------
+    d_list : list of Data
+        A list of data objects to be grouped into single data object
+
+    Raises
+    ------
+    RuntimeError
+        Mismatched fields indicating data are not technical repeats of each other
+    ValueError
+        Inconsistent FRET correction factors
+
+    Returns
+    -------
+    new_d : Data
+        Data object of inputs grouped into new multi-spot measurment.
+
+    """
+    if hasattr(d_list[0], 'bg_time_s'):
+        if np.any([d.bg_time_s != d_list[0].bg_time_s for d in d_list]):
+            raise RuntimeError("Inconsistent background estimation")
+    new_d = Data(**dict(d_list[0]))
+    new_d.add(nch = sum([d.nch for d in d_list]))
+    new_d.add(name = 'Joined data of\n' + '\n'.join(d.name for d in d_list))
+    for field in ('_leakage', '_dir_ex', '_gamma', '_beta', 'clk_p'):
+        if np.any([d[field] != new_d[field] for d in d_list]):
+            raise ValueError(f"Different {field} corrections, ensure data sets are technical repeats")
+    if hasattr(d_list[0], 'nanotimes_params'):
+        if not dict_equal(*[d.nanotimes_params[0] for d in d_list]):
+            raise RuntimeError("Different nanotime params, cannot group non-technical repeats")
+    if hasattr(d_list[0], 'det_donor_accept'):
+        new_d.add(det_donor_accept=[l for l in chain.from_iterable(d.det_donor_accept for d in d_list)])
+    # Check that burst metadata is also consistent, so analysis, if done conducted equally
+    meta_data = dict()
+    for field in chain(Data.ph_fields, Data.burst_fields, Data.bg_fields, Data.burst_metadata):
+        if hasattr(d_list[0], field):
+            if np.any([not hasattr(d, field) for d in d_list[1:]]):
+                raise RuntimeError(f"Inconsistent analysis of {field}")
+            if isinstance(d_list[0][field], np.ndarray):
+                meta_data[field] = np.concatenate([d[field] for d in d_list])
+            elif isinstance(d_list[0][field], list):
+                meta_data[field] = [val for val in chain.from_iterable(d[field] for d in d_list)]
+            elif isinstance(d_list[0][field], dict):
+                if np.any([d[field].keys() != d_list[0][field].keys() for d in d_list[1:]]):
+                    raise RuntimeError(f"Inconsistent analysis for {field}")
+                field_dict = dict()
+                for key in d_list[0][field].keys():
+                    field_dict[key] = [val for val in chain.from_iterable(d[field][key] for d in d_list)]
+                meta_data[field] = field_dict
+            elif np.any([d[field] != d_list[0][field] for d in d_list[1:]]):
+                raise RuntimeError(f"Inconsistent analysis for {field}")
+    new_d.add(**meta_data)                
+    setup = dict()
+    i = 0
+    for d in d_list:
+        setup[d.name] = (d.setup, slice(i, i+d.nch))
+    new_d.add(setup = setup)
     return new_d
 
 

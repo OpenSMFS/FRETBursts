@@ -148,3 +148,33 @@ def download_file(url, save_dir='./'):
             "\rDownloaded {0:4.1f} / {1:4.1f} MB".format(current, size/2**20))
     mkdir_p(save_dir)
     urlretrieve(url, path, _report)
+
+def _large_equal(val0, val1):
+    if type(val0) != type(val1):
+        return False
+    elif isinstance(val0, np.ndarray):
+        if np.any(val0.shape != val1.shape):
+            return False
+        else:
+            return np.all(val0 == val1)
+    elif isinstance(val0, (list, tuple)):
+        if len(val0) == len(val1):
+            return np.all([_large_equal(v0, v1) for v0, v1 in zip(val0, val1)])
+        else:
+            return False
+    else:
+        return val0 == val1
+
+
+def dict_equal(*dicts):
+    key0 = dicts[0].keys()
+    comp = np.all([key0 == dct.keys() for dct in dicts])
+    if comp:
+        for key, val0 in dicts[0].items():
+            for dct in dicts[1:]:
+                if not _large_equal(val0, dct[key]):
+                    comp = False
+                    break 
+            if not comp:
+                break
+    return comp

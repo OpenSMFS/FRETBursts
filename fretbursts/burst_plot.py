@@ -1930,6 +1930,8 @@ def _iter_plot(d, func, kwargs, iter_ch, nrows, ncols, figsize, AX,
     if skip_ch is None:
         skip_ch = []
     for i, ich in enumerate(iter_ch):
+        if ich >= d.nch:
+            break
         ax = AX.ravel()[i]
         ax.grid(grid)
         plt.setp(ax.get_xticklabels(), rotation=xrotation)
@@ -2130,11 +2132,11 @@ def dplot(d, func, **kwargs):
         nch = d.nch
     if nch == 1:
         return dplot_1ch(d=d, func=func, **kwargs)
-    elif nch == 8:
+    elif nch <= 8:
         return dplot_8ch(d=d, func=func, **kwargs)
-    elif nch == 16:
+    elif nch <= 16:
         return dplot_16ch(d=d, func=func, **kwargs)
-    elif nch == 48:
+    elif nch <= 48:
         return dplot_48ch(d=d, func=func, **kwargs)
 
 
