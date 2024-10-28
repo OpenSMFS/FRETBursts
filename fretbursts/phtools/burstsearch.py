@@ -182,7 +182,7 @@ def mch_count_ph_in_bursts_py(Mburst, Mask):
         A list of 1D array, each containing the number of photons
         in each burst counting only photons in the selection mask.
     """
-    return [np.asfarray(count_ph_in_bursts(bursts, mask))
+    return [np.asarray(count_ph_in_bursts(bursts, mask), dtype=np.float64)
             for bursts, mask in zip(Mburst, Mask)]
 
 

@@ -129,5 +129,5 @@ def mch_count_ph_in_bursts_c(mburst, masks):
     num_ph_list = []
     for bursts, mask in zip(mburst, masks):
         num_ph_list.append(
-            np.asfarray(count_ph_in_bursts_c(bursts.data, mask.view(np.uint8))))
+            np.asarray(count_ph_in_bursts_c(bursts.data, mask.view(np.uint8)), dtype=np.float64))
     return num_ph_list

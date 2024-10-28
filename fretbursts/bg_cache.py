@@ -197,7 +197,7 @@ def _load_bg_data(d, bg_calc_kwargs, h5file):
     for node in bg_group._f_iter_nodes():
         if node._v_name.startswith('BG_'):
             ph_sel = Ph_sel.from_str(node._v_name[len('BG_'):])
-            bg[ph_sel] = [np.asfarray(b) for b in node.read()]
+            bg[ph_sel] = [np.asarray(b, dtype=np.float64) for b in node.read()]
 
     Lim = bg_group.Lim.read()
     Ph_p = bg_group.Ph_p.read()

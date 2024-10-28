@@ -45,10 +45,10 @@ significance = [15, 10, 5, 2.5, 1]
 
 
 def weighted_median(data, weights=None):
-    data = np.asfarray(data)
+    data = np.asarray(data, dtype=np.float64)
     if weights is None:
         return np.median(data)
-    weights = np.asfarray(weights)
+    weights = np.asarray(weights, dtype=np.float64)
     data_argsort = data.argsort()
     sorted_data = data[data_argsort]
     sorted_weights = weights[data_argsort]

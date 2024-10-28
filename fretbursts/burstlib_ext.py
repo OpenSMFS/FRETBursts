@@ -248,7 +248,7 @@ def calc_bg_brute_cache(dx, min_ph_delay_list=None, return_all=False,
     if min_ph_delay_list is None:
         min_ph_delay_list = np.arange(100, 8500, 100)
     else:
-        min_ph_delay_list = np.asfarray(min_ph_delay_list)
+        min_ph_delay_list = np.asarray(min_ph_delay_list, dtype=np.float64)
 
     base_name = 'bg_%s_%ds_%s/' % (dx.bg_fun_name, dx.bg_time_s, error_metrics)
     store_fname = dx.fname[:-5] + '_BKG.hdf5'
@@ -301,7 +301,7 @@ def calc_bg_brute(dx, min_ph_delay_list=None, return_all=False,
     if min_ph_delay_list is None:
         min_ph_delay_list = np.arange(100, 8500, 100)
     else:
-        min_ph_delay_list = np.asfarray(min_ph_delay_list)
+        min_ph_delay_list = np.asarray(min_ph_delay_list, dtype=np.float64)
 
     ph_sel_labels = [str(p) for p in dx.ph_streams]
 

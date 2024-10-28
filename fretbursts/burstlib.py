@@ -222,7 +222,7 @@ def burst_ph_stats(ph_data, bursts, func=np.mean, func_kw=None, **kwargs):
     burst_stats = []
     for burst_ph in iter_bursts_ph(ph_data, bursts, **kwargs):
         burst_stats.append(func(burst_ph, **func_kw))
-    return np.asfarray(burst_stats)  # NOTE: asfarray converts None to nan
+    return np.asarray(burst_stats, dtype=np.float64)  # NOTE: asfarray converts None to nan
 
 
 def ph_in_bursts_mask(ph_data_size, bursts):
@@ -2629,7 +2629,7 @@ class Data(DataContainer):
         """Apply/update leakage (or bleed-through) correction.
         """
         assert (np.size(leakage) == 1) or (np.size(leakage) == self.nch)
-        self.add(_leakage=np.asfarray(leakage), leakage_corrected=True)
+        self.add(_leakage=np.asarray(leakage, dtype=np.float64), leakage_corrected=True)
         self._update_corrections()
 
     @property
@@ -2679,7 +2679,7 @@ class Data(DataContainer):
         """Change the `chi_ch` value and recompute E and S."""
         msg = 'chi_ch is a per-channel correction and must have size == nch.'
         assert np.size(chi_ch) == self.nch, ValueError(msg)
-        self.add(_chi_ch=np.asfarray(chi_ch))
+        self.add(_chi_ch=np.asarray(chi_ch, dtype=np.float64))
         if 'mburst' in self:
             # Recompute E and S and delete fitter objects
             self.calc_fret(corrections=False, pax=self.pax)
@@ -2697,7 +2697,7 @@ class Data(DataContainer):
     def _update_gamma(self, gamma):
         """Change the `gamma` value and recompute E and S."""
         assert (np.size(gamma) == 1) or (np.size(gamma) == self.nch)
-        self.add(_gamma=np.asfarray(gamma))
+        self.add(_gamma=np.asarray(gamma, dtype=np.float64))
         if 'mburst' in self:
             # Recompute E and S and delete fitter objects
             self.calc_fret(corrections=False, pax=self.pax)
