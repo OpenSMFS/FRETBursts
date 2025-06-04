@@ -2583,7 +2583,7 @@ def alex_jointplot(d, i=0, gridsize=50, cmap='Spectral_r', kind='hex',
     _alex_plot_style(g, colorbar=colorbar, cmap=jplot.cmap if
                      kind.startswith('hex') else None, vmin=vmin, vmax=vmax)
     if rightside_text:
-        plt.text(1.15, 0.6, d.name, transform=g.fig.transFigure, fontsize=14,
+        plt.text(1.15, 0.6, d.name, transform=g.transFigure, fontsize=14,
                  bbox=dict(edgecolor='r', facecolor='none', lw=1.3, alpha=0.5))
     return g
 
