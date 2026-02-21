@@ -27,6 +27,8 @@ jobs:
         run: |
           cd tests
           python fetch_files.py
+      - name: test move
+        run: cp tests/data/* *
       
   build:
     needs: download
@@ -93,7 +95,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/cache/restore@v5
         with:
-          path: tests/data
+          path: ~/tests/data
           enableCrossOsArchive: true
           key: testfiles
       - name: Build wheels
