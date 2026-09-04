@@ -44,7 +44,7 @@ def _alex_process(d):
 
 
 def load_dataset_1ch(process=True):
-    fname = fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.6084/m9.figshare.1456362.v15')
+    fname = fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.5281/zenodo.20038738')
     d = loader.photon_hdf5(fname)
     if process:
         _alex_process(d)
@@ -60,10 +60,10 @@ def load_dataset_1ch_nsalex(process=True):
 
 @pytest.fixture
 def dataset_1ch_file():
-    return fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.6084/m9.figshare.1456362.v15')
+    return fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.5281/zenodo.20038738')
 
 def load_dataset_8ch():
-    fname = fetch_if("12d_New_30p_320mW_steer_3.hdf5", 'doi:10.6084/m9.figshare.1019906.v26')
+    fname = fetch_if("12d_New_30p_320mW_steer_3.hdf5", 'doi:10.5281/zenodo.20038738')
     d = loader.photon_hdf5(fname)
     d.calc_bg(bg.exp_fit, time_s=30, tail_min_us=300)
     d.burst_search(L=10, m=10, F=7)
@@ -71,10 +71,10 @@ def load_dataset_8ch():
 
 @pytest.fixture
 def fake_pax_file():
-    return fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.6084/m9.figshare.1456362.v15')
+    return fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.5281/zenodo.20038738')
 
 def load_fake_pax():
-    fname = fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.6084/m9.figshare.1456362.v15')
+    fname = fetch_if("0023uLRpitc_NTP_20dT_0.5GndCl.hdf5", 'doi:10.5281/zenodo.20038738')
     d = loader.photon_hdf5(fname)
     d.add(ALEX=False, meas_type='PAX')
     loader.alex_apply_period(d)

@@ -1,43 +1,39 @@
 name: Tests
 
 on: [push, pull_request]
+
 jobs:
-  download:
+  Download:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: conda-incubator/setup-miniconda@v4
         with:
           auto-update-conda: true
-          activate-environment: test
           channels: conda-forge
           python-version: "3.12"
+          activate-environment: test
       - name: Install Pooch
         shell: bash -l {0}
-        run: |
-          conda install -c conda-forge pooch
+        run: conda install -c conda-forge pooch
       - name: Download Files
         shell: bash -l {0}
         run: |
           cd tests
           python fetch_files.py
-      - uses: actions/cache@v5
+      - uses: actions/cache@v6
         id: filecache
         with:
           path: ./tests/data
           enableCrossOsArchive: true
           key: testfiles
-      - name: Check Saved
-        shell: bash -l {0}
-        run: ls tests/data -l
-  
   build:
-    needs: download
-    runs-on: ${{matrix.os}}
+    needs: Download
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.12", "3.14"]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -45,37 +41,35 @@ jobs:
           fetch-depth: 0
       - name: Restore Cached Files
         id: cache-action
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
-          path: tests/data
+          path: ./data
           key: testfiles
           enableCrossOsArchive: true
-      - name: Check Restore
-        shell: bash -l {0}
-        run: ls tests/data
-      - uses: conda-incubator/setup-miniconda@v3
+      - name: Install Conda
+        uses: conda-incubator/setup-miniconda@v4
         with:
           auto-update-conda: true
-          activate-environment: test
           channels: conda-forge
           python-version: ${{ matrix.python-version }}
-      - name: Upgrade pip
+          activate_environment: test
+      - name: Apple Silicon Oddities
+        if: matrix.os == 'macos-latest'
         shell: bash -l {0}
-        run: python -m pip install --upgrade pip
-      - name: MacOS install hdf5 dependencies
-        if: runner.os == 'macOS'
         run: |
-          brew install hdf5
-          export HDF5_DIR=/usr/local/
-          export BLOSC_DIR=/usr/local/
+          brew install c-blosc hdf5
+          export HDF5_DIF=/opt/homebrew/opt/hdf5
+          export BLOSC_DIR=/opt/homebrew/opt/c-blosc
       - name: Install Dependencies
         shell: bash -l {0}
         run: |
-          conda install -c conda-forge cython numpy numba nbconvert pytest jupyter scipy pandas matplotlib pytables phconvert lmfit pybroom seaborn setuptools pyqt pooch
-      - name: Install project
+          conda install -c conda-forge pip
+          python -m pip install setuptools build
+          conda install -c conda-forge cython numpy numba nbconvert pytest jupyter scipy pandas matplotlib pytables phconvert lmfit pybroom seaborn pyqt pooch
+      - name: Install Project
         shell: bash -l {0}
-        run: |
-          python -m pip install . 
+        run:
+          pip install .
       - name: Test project
         shell: bash -l {0}
         run: |
@@ -84,14 +78,27 @@ jobs:
           cd ..
           cd tests
           python -m pytest
+      - name: Apple Silicon Oddities
+        if: matrix.os == 'macos-latest'
+        shell: bash -l {0}
+        run: |
+          brew install c-blosc hdf5
+          export HDF5_DIF=/opt/homebrew/opt/hdf5
+          export BLOSC_DIR=/opt/homebrew/opt/c-blosc
+      - name: Install Dependencies
+        shell: bash -l {0}
+        run: |
+          conda install -c conda-forge pip
+          python -m pip install setuptools build
+          conda install -c conda-forge pytest numpy numba scipy pandas matplotlib pytables phconvert
 
   build_wheels:
-    needs: build
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: build
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-14]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -99,20 +106,18 @@ jobs:
           fetch-depth: 0
       - name: Restore Cached Files
         id: cache-action
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
-          path: tests/data
+          path: ./tests/data
           key: testfiles
           enableCrossOsArchive: true
-      - name: Check Restore
-        shell: bash -l {0}
-        run: ls tests/data
       - name: Build wheels
-        uses: pypa/cibuildwheel@v3.3.1
+        uses: pypa/cibuildwheel@v4.2.0
         env:
           CIBW_SKIP: "pp* cp310-win_arm64"
           CIBW_TEST_REQUIRES: pytest numpy matplotlib scipy pandas tables numba seaborn lmfit phconvert
           CIBW_BEFORE_TEST: python -m pip install pytest
+          CIBW_CACHE_PATH: $GITHUB_WORKSPACE/tests/data
           CIBW_TEST_COMMAND: python -m pytest {package}/tests/ 
       - uses: actions/upload-artifact@v4
         with:

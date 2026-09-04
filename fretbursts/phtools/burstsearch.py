@@ -305,8 +305,8 @@ class Bursts:
         """
         bursts = cls.empty(len(bursts_list))
         for i, burst in enumerate(bursts_list):
-            bursts.istart[i], bursts.istop[i] = burst.istart, burst.istop
-            bursts.start[i], bursts.stop[i] = burst.start, burst.stop
+            bursts.istart[i], bursts.istop[i] = burst.istart[0], burst.istop[0]
+            bursts.start[i], bursts.stop[i] = burst.start[0], burst.stop[0]
         return bursts
 
     @classmethod
