@@ -43,7 +43,7 @@ jobs:
         id: cache-action
         uses: actions/cache/restore@v6
         with:
-          path: ./data
+          path: ./tests/data
           key: testfiles
           enableCrossOsArchive: true
       - name: Install Conda
