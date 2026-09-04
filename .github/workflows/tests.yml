@@ -28,8 +28,23 @@ jobs:
           cd tests
           python fetch_files.py
       - name: test move
+<<<<<<< HEAD
         run: cp tests/data/* *
       
+=======
+        run: |
+          ls tests/data
+      - uses: actions/cache@v5
+        id: filecache
+        with:
+          path: ./tests/data
+          enableCrossOsArchive: true
+          key: testfiles
+      - name: Check Saved
+        shell: bash -l {0}
+        run: ls tests/data
+  
+>>>>>>> 3393dfc (Update tests.yml)
   build:
     needs: download
     runs-on: ${{matrix.os}}
