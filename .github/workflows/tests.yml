@@ -78,20 +78,6 @@ jobs:
           cd ..
           cd tests
           python -m pytest
-      - name: Apple Silicon Oddities
-        if: matrix.os == 'macos-latest'
-        shell: bash -l {0}
-        run: |
-          brew install c-blosc hdf5
-          export HDF5_DIF=/opt/homebrew/opt/hdf5
-          export BLOSC_DIR=/opt/homebrew/opt/c-blosc
-      - name: Install Dependencies
-        shell: bash -l {0}
-        run: |
-          conda install -c conda-forge pip
-          python -m pip install setuptools build
-          conda install -c conda-forge pytest numpy numba scipy pandas matplotlib pytables phconvert
-
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
