@@ -7,12 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/cache@v5
-        id: filecache
-        with:
-          path: ./tests/data
-          enableCrossOsArchive: true
-          key: testfiles
       - uses: conda-incubator/setup-miniconda@v4
         with:
           auto-update-conda: true
@@ -33,10 +27,6 @@ jobs:
           path: ./tests/data
           enableCrossOsArchive: true
           key: testfiles
-      - name: Check Saved
-        shell: bash -l {0}
-        run: ls tests/data
-  
   build:
     needs: Download
     runs-on: ${{ matrix.os }}
@@ -66,10 +56,6 @@ jobs:
       - name: Apple Silicon Oddities
         if: matrix.os == 'macos-latest'
         shell: bash -l {0}
-        run: |
-          conda install pip -c conda-forge
-      - name: MacOS install hdf5 dependencies
-        if: runner.os == 'macOS'
         run: |
           brew install c-blosc hdf5
           export HDF5_DIF=/opt/homebrew/opt/hdf5
@@ -115,11 +101,12 @@ jobs:
         uses: pypa/cibuildwheel@v4.2.0
         env:
           CIBW_SKIP: "cp310-win_arm64"
-          CIBW_TEST_REQUIRES: pytest numpy matplotlib scipy pandas tables numba seaborn lmfit phconvert
+          CIBW_TEST_REQUIRES: pytest numpy matplotlib scipy pandas tables numba seaborn lmfit phconvert pooch
           CIBW_BEFORE_TEST: python -m pip install pytest
+          CIBW_CACHE_PATH: $GITHUB_WORKSPACE/tests/data
+          CIBW_TEST_COMMAND: python -m pytest {package}/tests/ 
           CIBW_TEST_SKIP: "*win* cp315-macosx_arm64 cp315t-macosx_* cp315t-manylinux_aarch64 *musllinux* cp315t-manylinux_x86_64"
       - uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
-
