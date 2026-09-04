@@ -63,7 +63,8 @@ from .utils.misc import HistData, _is_list_of_arrays, selection_mask
 from .scroll_gui import ScrollingToolQT
 from . import gui_selection as gs
 
-
+# so compatible with old and new version of numpy
+trapz = np.trapezoid if hasattr(np, 'trapezoid') else np.trapz
 ##
 # Globals
 #
@@ -295,8 +296,8 @@ def _burst_info(d, ich, burst_index):
     burst = d.mburst[ich][burst_index]
     params = dict(
         b_index=burst_index,
-        start_ms=float(burst.start) * d.clk_p * 1e3,
-        width_ms=float(burst.width) * d.clk_p * 1e3,
+        start_ms=float(burst.start[0]) * d.clk_p * 1e3,
+        width_ms=float(burst.width[0]) * d.clk_p * 1e3,
         nt=d.nt[ich][burst_index],
         nd=d.nd[ich][burst_index],
         na=d.na[ich][burst_index],
@@ -1098,7 +1099,7 @@ def _fitted_E_plot(d, i=0, F=1, no_E=False, ax=None, show_model=True,
             ax2.fill_between(x, scale*y, lw=lw, alpha=alpha, edgecolor=color,
                              facecolor=fillcolor, zorder=10)
         if verbose:
-            print('Fit Integral:', np.trapz(scale*y, x))
+            print('Fit Integral:', trapz(scale*y, x))
 
     ax2.axvline(d.E_fit[i], lw=3, color=red, ls='--', alpha=0.6)
     xtext = 0.6 if d.E_fit[i] < 0.6 else 0.2
@@ -1779,17 +1780,17 @@ def hist_ph_delays(
 
     efun = lambda t, r: np.exp(-r*t)*r
     try:
-        re = bg.exp_fit(ph, tail_min_us=efit_tail_min_us)[0]
+        re = bg.exp_fit(ph, tail_min_us=efit_tail_min_us)[0][0]
         re_do = True
     except:
         re_do = False
     try:
-        rg = bg.exp_hist_fit(ph, tail_min_us=efit_tail_min_us, binw=hfit_bin_ms*1e-3)[0]
+        rg = bg.exp_hist_fit(ph, tail_min_us=efit_tail_min_us, binw=hfit_bin_ms*1e-3)[0][0]
         rg_do = True
     except:
         rg_do = False
     try:
-        rc = bg.exp_cdf_fit(ph, tail_min_us=efit_tail_min_us)[0]
+        rc = bg.exp_cdf_fit(ph, tail_min_us=efit_tail_min_us)[0][0]
         rc_do = True
     except:
         rc_do = False
@@ -1851,7 +1852,7 @@ def hist_mdelays(d, i=0, m=10, bins_s=(0, 10, 0.02), period=0,
     max_delay_th_F = m/rate_ch_kcps/d.F
 
     burst_domain = bin_x < max_delay_th_F
-    burst_integral = np.trapz(x=bin_x[burst_domain],
+    burst_integral = trapz(x=bin_x[burst_domain],
                               y=mdelays_hist_y[burst_domain])
 
     ax.set_title("I = %.1f %%" % (burst_integral*100), fontsize='small')

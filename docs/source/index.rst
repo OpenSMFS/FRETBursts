@@ -64,6 +64,11 @@ Single-molecule FRET burst analysis
     <br>
 
 
+**Attention** FRETBursts will only be minimally supported from now on.
+
+The package `smfBursts <https://smfbursts.readthedocs.io>`__ is replacing the functionality of FRETBursts.
+Users are recomended to start migrating their piplines.
+
 **FRETBursts** is an open-source
 python package for burst analysis of freely-diffusing
 `single-molecule FRET <https://en.wikipedia.org/wiki/Single-molecule_FRET>`__
